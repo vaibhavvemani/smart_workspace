@@ -4,6 +4,7 @@ from pathlib import Path
 import cv2
 import mediapipe as mp
 
+from smart_workspace.cursor_practice import draw_cursor_practice
 from smart_workspace.gestures import detect_pinch
 
 
@@ -29,10 +30,19 @@ def main() -> None:
                 if not success:
                     break
 
+                frame = cv2.flip(frame, 1)
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
                 timestamp_ms = time.monotonic_ns() // 1_000_000
                 result = landmarker.detect_for_video(mp_image, timestamp_ms)
+
+                frame_height, frame_width = frame.shape[:2]
+                preview_scale = min(1.0, 560 / frame_width, 420 / frame_height)
+                if preview_scale < 1.0:
+                    frame = cv2.resize(
+                        frame, (0, 0), fx=preview_scale, fy=preview_scale,
+                        interpolation=cv2.INTER_AREA,
+                    )
 
                 frame_height, frame_width = frame.shape[:2]
                 pinch_results = []
@@ -72,7 +82,11 @@ def main() -> None:
                         cv2.LINE_AA,
                     )
 
-                cv2.imshow("Hand Landmarker", frame)
+                fingertip = None
+                if len(result.hand_landmarks) == 1:
+                    index_tip = result.hand_landmarks[0][8]
+                    fingertip = (index_tip.x, index_tip.y)
+                cv2.imshow("Hand Landmarker", draw_cursor_practice(frame, fingertip))
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
     finally:
