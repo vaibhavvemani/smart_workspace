@@ -10,10 +10,11 @@ requires-python = ">=3.12"
 dependencies = [
     "mediapipe>=1.2.3",
     "opencv-contrib-python",
+    "pyautogui>=0.9.54",
 ]
 
 [project.scripts]
-smart-workspace = "smart_workspace:main"
+smart-workspace = "smart_workspace.hand_display:main"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
